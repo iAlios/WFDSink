@@ -4,9 +4,6 @@ package com.alios.wfd.sink.demo;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.videolan.libvlc.IVideoPlayer;
-import org.videolan.libvlc.Util;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -22,6 +19,7 @@ import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.ActionListener;
 import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
+import android.net.wifi.p2p.WifiP2pManager.GroupInfoListener;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
 import android.os.Bundle;
 import android.os.Handler;
@@ -32,13 +30,11 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 
+import com.alios.wfd.sink.WFDHelper;
 import com.alios.wfd.sink.WifiP2pController;
 import com.alios.wfd.sink.apitest.R;
 
-/**
- * rtsp://192.168.49.208:7645/wfd1.0/streamid=0
- */
-public class WFDSinkActivity extends Activity implements IVideoPlayer {
+public class WFDSinkActivity extends Activity {
 
 	private static final String TAG = "WFD";
 
@@ -66,13 +62,7 @@ public class WFDSinkActivity extends Activity implements IVideoPlayer {
 			@Override
 			public void surfaceChanged(SurfaceHolder holder, int format, int width,
 			        int height) {
-				// WFDHelper.setVideoSurface(mSurfaceHolder.getSurface());
-				try {
-					Util.getLibVlcInstance().attachSurface(mSurfaceHolder.getSurface(),
-					        WFDSinkActivity.this);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				WFDHelper.setVideoSurface(mSurfaceHolder.getSurface());
 			}
 
 			@Override
@@ -81,11 +71,6 @@ public class WFDSinkActivity extends Activity implements IVideoPlayer {
 
 			@Override
 			public void surfaceDestroyed(SurfaceHolder holder) {
-				try {
-					Util.getLibVlcInstance().detachSurface();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
 			}
 		});
 	}
@@ -131,12 +116,12 @@ public class WFDSinkActivity extends Activity implements IVideoPlayer {
 
 			@Override
 			public void onSuccess() {
-				Log.d(TAG, "stopPeerDiscovery is onSuccess");
+				Log.d(TAG, " discoverPeers is onSuccess");
 			}
 
 			@Override
 			public void onFailure(int err) {
-				Log.d(TAG, "stopPeerDiscovery is " + err);
+				Log.d(TAG, " discoverPeers is " + err);
 			}
 		});
 		WifiP2pController.acquireWifiLock(this);
@@ -148,12 +133,12 @@ public class WFDSinkActivity extends Activity implements IVideoPlayer {
 
 			@Override
 			public void onSuccess() {
-				Log.d(TAG, "stopPeerDiscovery is onSuccess");
+				Log.d(TAG, " stopPeerDiscovery is onSuccess");
 			}
 
 			@Override
 			public void onFailure(int err) {
-				Log.d(TAG, "stopPeerDiscovery is " + err);
+				Log.d(TAG, " stopPeerDiscovery is " + err);
 			}
 		});
 		WifiP2pController.releaseWifiLock(this);
@@ -172,23 +157,62 @@ public class WFDSinkActivity extends Activity implements IVideoPlayer {
 
 			@Override
 			public void onSuccess() {
-				Log.d(TAG, "cancelConnect is onSuccess");
+				Log.d(TAG, " cancelConnect is onSuccess");
 			}
 
 			@Override
 			public void onFailure(int err) {
-				Log.d(TAG, "cancelConnect is " + err);
+				Log.d(TAG, " cancelConnect is " + err);
 			}
 		});
 	}
 
+	protected void startSink(final String ip, final String mac, final int cPort) {
+		WifiP2pManager cWifiP2pManager = ((WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE));
+		cWifiP2pManager.requestGroupInfo(mChannel, new GroupInfoListener() {
+
+			@Override
+			public void onGroupInfoAvailable(WifiP2pGroup group) {
+				if (group == null) {
+					Log.d(TAG, " WifiP2pGroup is NULL!");
+					return;
+				}
+				Log.d(TAG, " WifiP2pGroup is " + group);
+				// String passwd = null;
+				int mP2pControlPort = cPort;
+				if (group.isGroupOwner()) {
+					// passwd = group.getPassphrase();
+				}
+				Collection<WifiP2pDevice> p2pdevs = group.getClientList();
+				String sIP = ip;
+				for (WifiP2pDevice dev : p2pdevs) {
+					if (dev == null || dev.wfdInfo == null) {
+						continue;
+					}
+					if (WifiP2pController.isWifiDisplaySource(dev.wfdInfo) == false) {
+						continue;
+					}
+					mP2pControlPort = dev.wfdInfo.getControlPort();
+					sIP = WifiP2pController.getIPFromMac(mac);
+					break;
+				}
+
+				if (mP2pControlPort <= 0) {
+					mP2pControlPort = 7236;
+				}
+				startVLC(sIP, mac, mP2pControlPort, 1000);
+			}
+
+		});
+	}
+
 	private void agreeStartSink(final String mac, final int cPort) {
-		Log.d(TAG, "===agreeStartSink=========" + cPort);
+		Log.d(TAG, " =======agreeStartSink========= " + cPort);
 		WifiP2pManager cWifiP2pManager = ((WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE));
 		cWifiP2pManager.requestConnectionInfo(mChannel, new ConnectionInfoListener() {
 			public void onConnectionInfoAvailable(WifiP2pInfo info) {
-				Log.d(TAG, "　onConnectionInfoAvailable(): ======== " + info);
-				Log.d(TAG, "Sink is the P2P GO with IP ======" + mac + "======= ");
+				Log.d(TAG, " ======== onConnectionInfoAvailable(): ======== " + info);
+				Log.d(TAG, " Sink is the P2P GO with IP ======" + mac + "======= ");
 				startVLC(null, mac, cPort, 1000);
 			}
 
@@ -224,12 +248,7 @@ public class WFDSinkActivity extends Activity implements IVideoPlayer {
 
 			@Override
 			public void run() {
-				try {
-					Util.getLibVlcInstance().playMRL(
-					        "rtsp://" + sIP + "/wfd1.0/streamid=0");
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				WFDHelper.startSink(sIP, cPort);
 			}
 
 		}.start();
@@ -310,13 +329,4 @@ public class WFDSinkActivity extends Activity implements IVideoPlayer {
 		}
 	}
 
-	@Override
-	public void setSurfaceSize(int width, int height, int visible_width, int visible_height,
-	        int sar_num, int sar_den) {
-		Log.d(TAG, "width: " + width + " height: " + height + " visible_width: " + visible_width
-		        + " visible_height: "
-		        + visible_height
-		        + " sar_num: "
-		        + sar_num + " sar_den: " + sar_den);
-	}
 }

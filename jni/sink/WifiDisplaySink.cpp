@@ -418,6 +418,9 @@ void WifiDisplaySink::onReceiveClientData(const sp<AMessage> &msg) {
         return;
     }
 
+    ALOGW("session %d received '%s'",
+          sessionID, data->debugString().c_str());
+
     if (method.startsWith("RTSP/")) {
         // This is a response.
 

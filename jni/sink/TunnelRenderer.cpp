@@ -20,8 +20,6 @@
 
 #include "TunnelRenderer.h"
 
-#include "ATSParser.h"
-
 #include <binder/IMemory.h>
 #include <binder/IServiceManager.h>
 #include <gui/SurfaceComposerClient.h>
@@ -130,8 +128,8 @@ void TunnelRenderer::StreamSource::doSomeWork() {
             sp<AMessage> extra = new AMessage;
 
             extra->setInt32(
-                    IStreamListener::kKeyDiscontinuityMask,
-                    ATSParser::DISCONTINUITY_ABSOLUTE_TIME);
+                    IStreamListener::kKeyDiscontinuityMask, 8);
+                   // ATSParser::DISCONTINUITY_ABSOLUTE_TIME);
 
             extra->setInt64("timeUs", ALooper::GetNowUs());
 

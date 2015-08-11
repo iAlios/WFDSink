@@ -473,6 +473,7 @@ status_t RTPSink::parseRTP(const sp<ABuffer> &buffer) {
     int64_t arrivalTimeUs;
     CHECK(buffer->meta()->findInt64("arrivalTimeUs", &arrivalTimeUs));
 
+    ALOGV(" the arrivalTime US:  %lld", arrivalTimeUs);
     if (mFirstArrivalTimeUs < 0ll) {
         mFirstArrivalTimeUs = arrivalTimeUs;
     }

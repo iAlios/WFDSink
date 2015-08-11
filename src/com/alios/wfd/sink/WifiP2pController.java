@@ -40,6 +40,10 @@ public class WifiP2pController {
 		        .getSystemService(Context.WIFI_SERVICE));
 		WifiP2pManager cWifiP2pManager = ((WifiP2pManager) context
 		        .getSystemService(Context.WIFI_P2P_SERVICE));
+		if (cWifiManager.getWifiState() == WifiManager.WIFI_STATE_DISABLED
+		        || cWifiManager.getWifiState() == WifiManager.WIFI_STATE_DISABLING) {
+			cWifiManager.setWifiEnabled(true);
+		}
 		WifiP2pManager.Channel cChannel = cWifiP2pManager.initialize(context,
 		        context.getMainLooper(), null);
 		// cWifiP2pManager.setMiracastMode(WifiP2pManager.MIRACAST_SINK);
@@ -49,6 +53,8 @@ public class WifiP2pController {
 		cWifiP2pWfdInfo.setSessionAvailable(true);
 		cWifiP2pWfdInfo.setControlPort(DEFAULT_CONTROL_PORT);
 		cWifiP2pWfdInfo.setMaxThroughput(MAX_THROUGHPUT);
+		cWifiP2pWfdInfo.setCoupledSinkSupportAtSink(true);
+		cWifiP2pWfdInfo.setPreferredDisplaySupported(true);
 		cWifiP2pManager.setWFDInfo(cChannel, cWifiP2pWfdInfo, new WFDActionListener("setWFDInfo"));
 		cWifiP2pManager.setDeviceName(cChannel, getWFDSinkName(cWifiManager),
 		        new WFDActionListener("setDeviceName"));
