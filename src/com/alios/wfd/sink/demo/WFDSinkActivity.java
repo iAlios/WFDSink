@@ -243,7 +243,10 @@ public class WFDSinkActivity extends Activity {
 	}
 
 	private void startVLC(final String sIP, final int cPort) {
-		Log.d(TAG, " ===startVLC=== ip:" + sIP + "  port: " + cPort);
+		Log.d(TAG, " === startVLC === ip:" + sIP + "  port: " + cPort);
+		Log.d(TAG,
+		        " === some android phone made by Samsung model with Exynos SOC, can use by VideoView with build-in wfd protocol to play with wfd://"
+		                + sIP + ":" + cPort);
 		new Thread() {
 
 			@Override
@@ -311,8 +314,10 @@ public class WFDSinkActivity extends Activity {
 								cWifiP2pDevice = cDevice;
 							}
 						}
-						agreeStartSink(cWifiP2pDevice.deviceAddress,
-						        cWifiP2pDevice.wfdInfo.getControlPort());
+						if (cWifiP2pDevice != null) {
+							agreeStartSink(cWifiP2pDevice.deviceAddress,
+							        cWifiP2pDevice.wfdInfo.getControlPort());
+						}
 					}
 				} else {
 					if (isEnable.get()) {

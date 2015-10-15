@@ -81,6 +81,8 @@ private:
     AString mRTSPHost;
     int32_t mSessionID;
 
+    AString mPresentation_URL;
+
     int32_t mNextCSeq;
 
     KeyedVector<ResponseID, HandleRTSPResponseFunc> mResponseHandlers;

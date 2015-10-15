@@ -301,6 +301,8 @@ status_t AXNetworkSession::Session::readMore() {
         err = -ECONNRESET;
     }
 
+    ALOGD("000   receive %ld %u:\n%s\n", n, mInBuffer.size(), mInBuffer.c_str());
+
     if (!mIsRTSPConnection) {
         // TCP stream carrying 16-bit length-prefixed datagrams.
 
@@ -482,6 +484,8 @@ status_t AXNetworkSession::Session::writeMore() {
     do {
         n = send(mSocket, mOutBuffer.c_str(), mOutBuffer.size(), 0);
     } while (n < 0 && errno == EINTR);
+
+    ALOGD("111  send %ld %u:\n%s\n", n, mOutBuffer.size(), mOutBuffer.c_str());
 
     status_t err = OK;
 
@@ -820,19 +824,21 @@ status_t AXNetworkSession::createClientOrServer(
     } else {
         res = bind(s, (const struct sockaddr *)&addr, sizeof(addr));
 
+        ALOGI("================kModeCreateUDPSession=====bind local port=========", res);
         if (res == 0) {
             if (mode == kModeCreateRTSPServer
                     || mode == kModeCreateTCPDatagramSessionPassive) {
                 res = listen(s, 4);
             } else {
                 CHECK_EQ(mode, kModeCreateUDPSession);
-
+                ALOGI("================kModeCreateUDPSession================");
                 if (remoteHost != NULL) {
                     struct sockaddr_in remoteAddr;
                     memset(remoteAddr.sin_zero, 0, sizeof(remoteAddr.sin_zero));
                     remoteAddr.sin_family = AF_INET;
                     remoteAddr.sin_port = htons(remotePort);
 
+                    ALOGI("================kModeCreateUDPSession=======connect=========");
                     struct hostent *ent= gethostbyname(remoteHost);
                     if (ent == NULL) {
                         err = -h_errno;
